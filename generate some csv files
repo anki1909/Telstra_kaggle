@@ -1,0 +1,188 @@
+from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor, GradientBoostingRegressor
+from sklearn import svm
+from sklearn.linear_model import LinearRegression
+
+from sklearn import decomposition
+from collections import defaultdict
+import numpy as np
+import pandas as pd
+from sklearn.cross_validation import StratifiedKFold
+from sklearn import ensemble, preprocessing, grid_search, cross_validation
+from sklearn import metrics
+
+from sklearn.calibration import CalibratedClassifierCV
+from collections import Counter
+
+import scipy.stats as scs
+
+def convert_log(x):
+    k = x.values[0]
+    k = k.split(',')
+    val = []
+    length  = len(k)
+    for i in range(20):
+        try:
+            if i!= length-1:
+                val.append(k[i])
+            else:
+                val.append(k[i][0:-1])
+        except:
+            val.append('z')
+    val[0] = val[0][1:]
+    val =  np.sort(val)
+    return pd.Series([val[0],val[1],val[2],val[3],val[4],val[5],val[6],val[7],val[8],val[9],val[10],val[11],val[12],val[13],val[14],val[15],val[16],val[17],val[18],val[19]], \
+    index=['l1', 'l2','l3','l4', 'l5','l6','l7', 'l8','l9','l10','l11','l12','l13','l14','l15','l16','l17','l18','l19', 'l20'])
+
+
+
+
+
+
+def convert_event(x):
+    k = x.values[0]
+    k = k.split(',')
+    val = []
+    length  = len(k)
+    for i in range(11):
+        try:
+            if i!= length-1:
+                val.append(k[i])
+            else:
+                val.append(k[i][0:-1])
+        except:
+            val.append('z')
+    val[0] = val[0][1:]
+    val =  np.sort(val)
+    return pd.Series([val[0],val[1],val[2],val[3],val[4],val[5],val[6],val[7],val[8],val[9],val[10]], index=['e1', 'e2','e3','e4', 'e5','e6','e7', 'e8','e9','e10','e11'])
+
+
+def convert_resource(x):
+    k = x.values[0]
+    k = k.split(',')
+    val = []
+    length  = len(k)
+    for i in range(5):
+        try:
+            if i!= length-1:
+                val.append(k[i])
+            else:
+                val.append(k[i][0:-1])
+        except:
+            val.append('z')
+    val[0] = val[0][1:]
+    #print val[0]
+    val =  np.sort(val)
+    return pd.Series([val[0],val[1],val[2],val[3],val[4]], index=['r1', 'r2','r3','r4', 'r5'])
+
+    
+
+def print_dict(x):
+    print x
+
+
+
+if __name__ == '__main__':
+    train = pd.read_csv('../input/train.csv')
+    severity_type = pd.read_csv('../input/severity_type.csv')
+    event_type = pd.read_csv('../input/event_type.csv')  
+    resource_type = pd.read_csv('../input/resource_type.csv')
+    log_feature = pd.read_csv('../input/log_feature.csv')
+    test = pd.read_csv('../input/test.csv')
+    print train.shape,test.shape,len(np.unique(train.id)),len(np.unique(test.id))
+    
+    # for event 
+    """
+    train = train.merge(event_type, on ='id')
+    test = test.merge(event_type, on = 'id')
+    
+    train['event_type'] = train['event_type'].str.replace(r' ' , '')
+    e0 = train.loc[train.fault_severity == 0, ['event_type','fault_severity']]
+    e1 = train.loc[train.fault_severity == 1, ['event_type','fault_severity']]
+    e2 = train.loc[train.fault_severity == 2, ['event_type','fault_severity']]
+    
+    l0 = e0.groupby('event_type').agg('count').reset_index()
+    l0.to_csv('fault_0_count.csv',index = False)
+    
+    l1 = e1.groupby('event_type').agg('count').reset_index()
+    l1.to_csv('fault_1_count.csv',index = False)
+    
+    l2 = e2.groupby('event_type').agg('count').reset_index()
+    l2.to_csv('fault_2_count.csv',index = False)
+    
+    
+    e_0 =  l0.set_index('event_type')['fault_severity'].to_dict()
+    e_1 =  l1.set_index('event_type')['fault_severity'].to_dict()
+    e_2 =  l2.set_index('event_type')['fault_severity'].to_dict()
+    
+    print_dict(e_0)
+    
+    """
+    
+    # for log
+    """
+    
+    train = train.merge(log_feature, on ='id')
+    test = test.merge(log_feature, on = 'id')
+    
+    train['log_feature'] = train['log_feature'].str.replace(r' ' , '')
+    l0 = train.loc[train.fault_severity == 0, ['log_feature','fault_severity']]
+    l1 = train.loc[train.fault_severity == 1, ['log_feature','fault_severity']]
+    l2 = train.loc[train.fault_severity == 2, ['log_feature','fault_severity']]
+    
+    l0 = l0.groupby('log_feature').agg('count').reset_index()
+    l0.to_csv('fault_0_log_count.csv',index = False)
+    
+    l1 = l1.groupby('log_feature').agg('count').reset_index()
+    l1.to_csv('fault_1__log_count.csv',index = False)
+    
+    l2 = l2.groupby('log_feature').agg('count').reset_index()
+    l2.to_csv('fault_2__log_count.csv',index = False)
+    
+    
+    
+    
+    l0.rename(columns={'fault_severity':'fault_severity0'}, inplace=True)
+    l1.rename(columns={'fault_severity':'fault_severity1'}, inplace=True)
+    l2.rename(columns={'fault_severity':'fault_severity2'}, inplace=True)
+    l1 = l0.merge(l1,on = 'log_feature',how = 'outer')
+    l1 = l1.merge(l2,on = 'log_feature',how = 'outer')
+    
+    l1 = l1.replace(np.nan , 0)
+    
+    l1['fault_severity_ratio0']  =  (l1['fault_severity0'])* 1/ (l1['fault_severity0']+l1['fault_severity1']+l1['fault_severity2'])
+    l1['fault_severity_ratio2']  =  (l1['fault_severity2'])* 1/ (l1['fault_severity0']+l1['fault_severity1']+l1['fault_severity2'])
+    
+    l1.to_csv('ratio_l.csv',index = False)
+    
+    """
+    
+    """
+    
+    train = train.merge(resource_type, on ='id')
+    test = test.merge(resource_type, on = 'id')
+    
+    train['resource_type'] = train['resource_type'].str.replace(r' ' , '')
+    l0 = train.loc[train.fault_severity == 0, ['resource_type','fault_severity']]
+    l1 = train.loc[train.fault_severity == 1, ['resource_type','fault_severity']]
+    l2 = train.loc[train.fault_severity == 2, ['resource_type','fault_severity']]
+    
+    l0 = l0.groupby('resource_type').agg('count').reset_index()
+    l0.to_csv('fault_0_re_count_count.csv',index = False)
+    
+    l1 = l1.groupby('resource_type').agg('count').reset_index()
+    l1.to_csv('fault_1_re_count_count.csv',index = False)
+    
+    l2 = l2.groupby('resource_type').agg('count').reset_index()
+    l2.to_csv('fault_2_re_count_count.csv',index = False)
+    
+    
+    """
+    """
+    locations = list(train.location.values) + list(test.location.values)    
+    
+    c = Counter(locations)
+    t = pd.DataFrame({'location':c.keys(), 'location_counts':c.values()})
+    t.to_csv('location_count.csv',index = False)
+    """
+    
+   
