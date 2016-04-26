@@ -1,1 +1,555 @@
 
+from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor, GradientBoostingClassifier
+from sklearn import svm
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn import svm
+from sklearn.linear_model import LogisticRegression
+
+from sklearn import decomposition,pipeline
+from collections import defaultdict
+import numpy as np
+import pandas as pd
+from sklearn.cross_validation import StratifiedKFold
+from sklearn import ensemble, preprocessing, grid_search, cross_validation
+from sklearn import metrics 
+from sklearn.calibration import CalibratedClassifierCV
+
+import scipy.stats as scs
+from sklearn.svm import SVC
+from sklearn.decomposition import TruncatedSVD
+from sklearn.preprocessing import StandardScaler
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+import scipy as sp
+from sklearn import decomposition,pipeline
+from collections import defaultdict
+import numpy as np
+import pandas as pd
+from sklearn.cross_validation import StratifiedKFold
+from sklearn import ensemble, preprocessing, grid_search, cross_validation
+from sklearn import metrics 
+from sklearn.calibration import CalibratedClassifierCV
+
+import scipy.stats as scs
+from sklearn.svm import SVC
+from sklearn.decomposition import TruncatedSVD
+from sklearn.preprocessing import StandardScaler
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+
+"""
+['id', 'location', 'fault_severity', 'severity_type', 'e_counts',
+       'e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'e8', 'e9', 'e10', 'e11',
+       'l_counts', 'l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9',
+       'l10', 'l11', 'l12', 'l13', 'l14', 'l15', 'l16', 'l17', 'l18',
+       'l19', 'l20', 'volume_mean', 'volume_max', 'volume_min', 'r_counts',
+       'r1', 'r2', 'r3', 'r4', 'r5']
+
+
+"""
+
+def multiclass_log_loss(y_true, y_pred, eps=1e-15):
+  
+    predictions = np.clip(y_pred, eps, 1 - eps)
+    #print predictions
+    # normalize row sums to 1
+    predictions /= predictions.sum(axis=1)[:, np.newaxis]
+    
+    #print predictions
+    actual = np.zeros(y_pred.shape)
+    #print actual
+    rows = actual.shape[0]
+    #print rows
+    actual[np.arange(rows), y_true.astype(int)] = 1
+    #print 'l'
+    vsota = np.sum(actual * np.log(predictions))
+    return -(1.0 / rows) * vsota
+
+def count(train,test,y):
+    #print train.columns,test.columns
+    train = train.replace(np.nan,0)
+    test = test.replace(np.nan,0)
+    #print train.groupby(y).agg('count')['fault_severity']
+    count1 =  train.groupby(y).agg('count')['fault_severity']
+    sum1   =  train.groupby(y).agg('sum')['fault_severity']
+    #print len(count1),len(sum1),count1.index
+    data_frame_count = pd.DataFrame({y:count1.index.values,'count' + str(y):count1.values})
+    data_frame_sum = pd.DataFrame({y:count1.index.values,'sum'+str(y):sum1.values})
+    return (data_frame_count,data_frame_sum)
+
+
+
+def weighted_sum(train):
+    return e_0[train[0]] + e_0[train[1]] + e_0[train[2]] + e_0[train[3]] +e_0[train[4]]  +e_0[train[5]] + e_0[train[6]] + e_0[train[7]] + e_0[train[8]] + e_0[train[9]] +e_0[train[10]] 
+ 
+def weighted_sum_l1(train):
+   #print len(train),l_1[train[0]],l_1[train[1]]
+    return l_1[train[0]] + l_1[train[1]] + l_1[train[2]] + l_1[train[3]] +l_1[train[4]]  +l_1[train[5]] + l_1[train[6]] + l_1[train[7]] + l_1[train[8]] + l_1[train[9]] +l_1[train[10]] +l_1[train[11]] + l_1[train[12]] + l_1[train[13]] + l_1[train[14]] + l_1[train[15]] +l_1[train[16]]  +l_1[train[17]] + l_1[train[18]] + l_1[train[19]] 
+
+def weighted_sum_l2(train):
+    return l_2[train[0]] + l_2[train[1]] + l_2[train[2]] + l_2[train[3]] +l_2[train[4]]  +l_2[train[5]] + l_2[train[6]] + l_2[train[7]] + l_2[train[8]] + l_2[train[9]] +l_2[train[10]] +l_2[train[11]] + l_2[train[12]] + l_2[train[13]] + l_2[train[14]] + l_2[train[15]] +l_2[train[16]]  +l_2[train[17]] + l_2[train[18]] + l_2[train[19]] 
+   
+def weighted_sum_l3(train): 
+    return l_3[train[0]] + l_3[train[1]] + l_3[train[2]] + l_3[train[3]] +l_3[train[4]]  +l_3[train[5]] + l_3[train[6]] + l_3[train[7]] + l_3[train[8]] + l_3[train[9]] +l_3[train[10]] +l_3[train[11]] + l_3[train[12]] + l_3[train[13]] + l_3[train[14]] + l_3[train[15]] +l_3[train[16]]  +l_3[train[17]] + l_3[train[18]] + l_3[train[19]] 
+   
+"""
+def weight(train): 
+    print len(train)
+    return pd.Series({l_3[train[0]] , l_3[train[1]] ,l_3[train[2]] , l_3[train[3]] ,l_3[train[4]]} )
+   
+train['weighted_sum_l1'] = train[['l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9','l10', 'l11', 'l12', 'l13', 'l14', 'l15', 'l16', 'l17', 'l18','l19', 'l20']].apply(weight, axis=1)
+""" 
+  
+
+def zero_one_encoding(x):
+    a = np.zeros(11)
+    dct = {'resource_type1':1, 'resource_type10':10, 'resource_type2':2 ,
+       'resource_type3':3, 'resource_type4':4, 'resource_type5':5,
+       'resource_type6':6, 'resource_type7':7, 'resource_type8':8,
+       'resource_type9':9, 'z':0 }
+
+    a[dct[x[0]]] = a[dct[x[0]]] + 1
+    a[dct[x[1]]] = a[dct[x[1]]] + 1
+    a[dct[x[2]]] = a[dct[x[2]]] + 1
+    a[dct[x[3]]] = a[dct[x[3]]] + 1
+    a[dct[x[4]]] = a[dct[x[4]]] + 1
+    #print a[0]
+    return pd.Series({'R0':a[0],'R1':a[1],'R2':a[2],'R3':a[3],'R4':a[4],'R5':a[5],'R6':a[6],'R7':a[7],'R8':a[8],'R9':a[9],'R10':a[10]})
+""" 
+    
+def tf_idf_cal(train,test,y):
+    traindata = list(train.apply(lambda x:'%s %s %s %s %s %s %s %s %s %s %s' % (x['e1'],x['e2'],x['e3'],x['e4'],x['e5'],x['e6'],x['e7'],x['e8'],x['e9'],x['e10'],x['e11']),axis=1))
+    testdata = list(test.apply(lambda x:'%s %s %s %s %s %s %s %s %s %s %s' % (x['e1'],x['e2'],x['e3'],x['e4'],x['e5'],x['e6'],x['e7'],x['e8'],x['e9'],x['e10'],x['e11']),axis=1))
+    # the infamous tfidf vectorizer (Do you remember this one?)
+    tfv = TfidfVectorizer(min_df=3,  max_features=None, 
+            strip_accents='unicode', analyzer='word',token_pattern=r'\w{1,}',
+            ngram_range=(1, 2), use_idf=False,smooth_idf=False,sublinear_tf=1,
+            stop_words = ['z'])
+    
+    # Fit TFIDF
+    tfv.fit(list(traindata)+list(testdata))
+    X =  tfv.transform(traindata) 
+    X_test1 = tfv.transform(testdata)
+    
+    return X,X_test1,tfv    
+    
+"""
+
+
+import random
+def tf_idf_cal(train,test,y):
+    random.seed(1)
+    #print type(x['e1'],x['e2'],x['e3'],x['e4'],x['e5'],x['e6'],x['e7'],x['e8'],x['e9'],x['e10'],x['e11'],x['l1'],x['l2'],x['l3'],x['l4'],x['l5'],x['l6'],x['l7'],x['l8'],x['l9'],x['l10'],x['l11'],x['l12'],x['l13'],x['l14'],x['l15'],x['l16'],x['l17'],x['l18'],x['l19'],x['l20'])
+    traindata = list(train.apply(lambda x:'%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s' % (x['e1'],x['e2'],x['e3'],x['e4'],x['e5'],x['e6'],x['e7'],x['e8'],x['e9'],x['e10'],x['e11'],x['l1'],x['l2'],x['l3'],x['l4'],x['l5'],x['l6'],x['l7'],x['l8'],x['l9'],x['l10'],x['l11'],x['l12'],x['l13'],x['l14'],x['l15'],x['l16'],x['l17'],x['l18'],x['l19'],x['l20']),axis=1))
+    testdata = list(test.apply(lambda x:'%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s' % (x['e1'],x['e2'],x['e3'],x['e4'],x['e5'],x['e6'],x['e7'],x['e8'],x['e9'],x['e10'],x['e11'],x['l1'],x['l2'],x['l3'],x['l4'],x['l5'],x['l6'],x['l7'],x['l8'],x['l9'],x['l10'],x['l11'],x['l12'],x['l13'],x['l14'],x['l15'],x['l16'],x['l17'],x['l18'],x['l19'],x['l20']),axis=1))
+    
+    # the infamous tfidf vectorizer (Do you remember this one?)
+    tfv = TfidfVectorizer(min_df=2,  max_features=None, 
+            strip_accents='unicode', analyzer='word',token_pattern=r'\w{1,}',
+            ngram_range=(1, 3), use_idf=False,smooth_idf=False,sublinear_tf=1,
+            stop_words = ['z'])
+    
+    # Fit TFIDF
+    tfv.fit(list(traindata)+list(testdata))
+    X =  tfv.transform(traindata).toarray()
+    X_test1 = tfv.transform(testdata).toarray()
+    X[X != 0] = 1
+    X_test1[X_test1 !=0] = 1
+    svd = TruncatedSVD(n_components = 100)
+    scl = StandardScaler()
+    #svm_model = SVC(C = 10,probability = True)
+    svm_model = ensemble.GradientBoostingClassifier(random_state = 42, learning_rate = 0.01,  min_samples_split = 30,subsample =1 , max_features = 'sqrt' ,  n_estimators = 1000 , max_depth =  6)
+    clf = pipeline.Pipeline([('svd', svd),('scl', scl),('svm', svm_model)])
+    n_folds = 10
+    skf = list(StratifiedKFold(y, n_folds))
+    dataset_blend_train = np.zeros((X.shape[0], 2))
+    dataset_blend_test = np.zeros((X_test1.shape[0], 2))
+    dataset_blend_test_j = np.zeros((X_test1.shape[0], len(skf)))
+    dataset_blend_test_j1 = np.zeros((X_test1.shape[0], len(skf)))
+    for i, (train1, test1) in enumerate(skf):
+            print i
+            X_train = X[train1]
+            y_train = y[train1]
+            X_test = X[test1]
+            y_test =  y[test1]
+            clf.fit(X_train, y_train)
+            y_submission = clf.predict_proba(X_test)
+            #print type(test_prob)
+            comupted_score = multiclass_log_loss(y_test, y_submission)
+            print i,comupted_score,y_submission.shape
+            dataset_blend_train[test1, 0] = y_submission[:,0]
+            dataset_blend_train[test1, 1] = y_submission[:,1]
+            dataset_blend_test_j[:, i] = clf.predict_proba(X_test1)[:,0]
+            dataset_blend_test_j1[:, i] = clf.predict_proba(X_test1)[:,1]
+    dataset_blend_test[:,0] = dataset_blend_test_j.mean(1)
+    dataset_blend_test[:,1] = dataset_blend_test_j1.mean(1)
+    return dataset_blend_train,dataset_blend_test
+
+
+
+def find_two_min_two_max(x):
+    val = np.sort(x.values[20:])
+    val1 = x.values[0:20][np.argsort(x.values[20:])]
+    #print val[val>0][0],val1[val>0][0],val[val>0][-1],val1[val>0][-1]
+    if len(val[val>0]) > 3:
+        return pd.Series([val[val>0][0],val[val>0][1],val[val>0][-1],val[val>0][-2],val1[val>0][0],val1[val>0][1],val1[val>0][-1],val1[val>0][-2]], index = ['s_v1','s_v2','s_v3','s_v4','s_l1','s_l2','s_l3','s_l4'])
+        print val,'asas', val1
+    if len(val[val>0]) == 3:
+        return pd.Series([val[val>0][0],val[val>0][1],val[val>0][-1],0,val1[val>0][0],val1[val>0][1],val1[val>0][-1],'z'], index = ['s_v1','s_v2','s_v3','s_v4','s_l1','s_l2','s_l3','s_l4'])
+    if len(val[val>0]) == 2:
+        return pd.Series([val[val>0][0],val[val>0][1],0,0,val1[val>0][0],val1[val>0][1],'z','z'], index = ['s_v1','s_v2','s_v3','s_v4','s_l1','s_l2','s_l3','s_l4'])
+    if len(val[val>0]) == 1:
+        return pd.Series([val[val>0][0],0,0,0,val1[val>0][0],'z','z','z'], index = ['s_v1','s_v2','s_v3','s_v4','s_l1','s_l2','s_l3','s_l4'])
+    if len(val[val>0]) == 1:
+        return pd.Series([0,0,0,0,0,'z','z','z'], index = ['s_v1','s_v2','s_v3','s_v4','s_l1','s_l2','s_l3','s_l4'])
+              
+        
+    
+
+if __name__ == '__main__':
+    
+    train = pd.read_csv('../input/new_train_afterrearrange.csv')#,nrows = 300)
+    test = pd.read_csv('../input/new_test_afterrearrange.csv')
+    y = train.fault_severity.copy()
+    
+    
+    
+    
+    train1_more = train[['l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8',
+    'l9', 'l10', 'l11', 'l12', 'l13', 'l14', 'l15', 'l16', 'l17', 'l18',
+       'l19', 'l20', 'v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9',
+       'v10', 'v11', 'v12', 'v13', 'v14', 'v15', 'v16', 'v17', 'v18',
+       'v19', 'v20',]].apply(find_two_min_two_max ,axis = 1) 
+       
+    test1_more = test[['l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8',
+    'l9', 'l10', 'l11', 'l12', 'l13', 'l14', 'l15', 'l16', 'l17', 'l18',
+       'l19', 'l20', 'v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9',
+       'v10', 'v11', 'v12', 'v13', 'v14', 'v15', 'v16', 'v17', 'v18',
+       'v19', 'v20',]].apply(find_two_min_two_max ,axis = 1)
+
+    
+   
+    
+    
+    
+    
+    
+    
+    
+    
+    #loc_flt_count = train.loc[train['fault_severity'] == 0, ['location','fault_severity']].groupby('location').agg('count').reset_index()
+    
+    #t1, t2 = tf_idf_cal(train[['e1','e2','e3','e4','e5','e6','e7','e8','e9','e10','e11','l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9','l10', 'l11', 'l12', 'l13', 'l14', 'l15', 'l16', 'l17', 'l18','l19', 'l20']] , test[['e1','e2','e3','e4','e5','e6','e7','e8','e9','e10','e11','l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9','l10', 'l11', 'l12', 'l13', 'l14', 'l15', 'l16', 'l17', 'l18','l19', 'l20']] , y)
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    location_count = pd.read_csv('../input/location_count.csv')
+    train = train.merge(location_count , on = 'location' , how = 'left')
+    test = test.merge(location_count , on = 'location' , how = 'left')
+    
+
+    
+    e_0 = pd.read_csv('../input/fault_0_count.csv')
+    e_1 = pd.read_csv('../input/fault_1_count.csv')
+    e_2 = pd.read_csv('../input/fault_2_count.csv') 
+    e_0.rename(columns={'event_type':'e1'}, inplace=True)
+    e_0.rename(columns = {'fault_severity':'e1_counts'},inplace= True)
+    e_1.rename(columns={'event_type':'e2'}, inplace=True)
+    e_1.rename(columns = {'fault_severity':'e1_counts'},inplace= True)
+    
+    
+    
+    
+    train = train.merge(e_1, on = 'e2', how = 'left')
+    test = test.merge(e_1, on = 'e2', how = 'left')
+    
+    
+    
+    e_0 =  e_0.set_index('e1')['e1_counts'].to_dict()
+    e_0 = defaultdict(int, e_0)
+    train['weighted_sum_e1'] = train[['e1','e2','e3','e4','e5','e6','e7','e8','e9','e10','e11']].apply(weighted_sum, axis=1)
+    test['weighted_sum_e1'] = test[['e1','e2','e3','e4','e5','e6','e7','e8','e9','e10','e11']].apply(weighted_sum, axis=1)
+   
+   
+    
+    l_00 = pd.read_csv('../input/fault_0_log_count.csv')
+    l_10 = pd.read_csv('../input/fault_1_log_count.csv')
+    l_20 = pd.read_csv('../input/fault_2_log_count.csv')
+    l_1 =  l_00.set_index('log_feature')['fault_severity'].to_dict()
+    l_1 = defaultdict(int, l_1)
+    l_2 =  l_10.set_index('log_feature')['fault_severity'].to_dict()
+    l_2 = defaultdict(int, l_2)
+    l_3 =  l_20.set_index('log_feature')['fault_severity'].to_dict()
+    l_3 = defaultdict(int, l_3)
+    
+    
+    
+    print 'adsasdsasda'
+    train['weighted_sum_l1'] = train[['l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9','l10', 'l11', 'l12', 'l13', 'l14', 'l15', 'l16', 'l17', 'l18','l19', 'l20']].apply(weighted_sum_l1, axis=1)
+    test['weighted_sum_l1'] = test[['l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9','l10', 'l11', 'l12', 'l13', 'l14', 'l15', 'l16', 'l17', 'l18','l19', 'l20']].apply(weighted_sum_l1, axis=1)
+   
+    train['weighted_sum_l2'] = train[['l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9','l10', 'l11', 'l12', 'l13', 'l14', 'l15', 'l16', 'l17', 'l18','l19', 'l20']].apply(weighted_sum_l2, axis=1)
+    test['weighted_sum_l2'] = test[['l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9','l10', 'l11', 'l12', 'l13', 'l14', 'l15', 'l16', 'l17', 'l18','l19', 'l20']].apply(weighted_sum_l2, axis=1)
+           
+    train['weighted_sum_l3'] = train[['l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9','l10', 'l11', 'l12', 'l13', 'l14', 'l15', 'l16', 'l17', 'l18','l19', 'l20']].apply(weighted_sum_l3, axis=1)
+    test['weighted_sum_l3'] = test[['l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9','l10', 'l11', 'l12', 'l13', 'l14', 'l15', 'l16', 'l17', 'l18','l19', 'l20']].apply(weighted_sum_l3, axis=1)
+      
+    
+    
+    
+    
+    
+    
+    
+    
+    # intraction
+    
+    temp = train.append(test)
+    l = train[['r1','e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'e8', 'e9', 'e10', 'e11','severity_type']].append(test[['r1','e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'e8', 'e9', 'e10', 'e11','severity_type']])
+    l = l[['r1','e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'e8', 'e9', 'e10', 'e11','severity_type']].groupby\
+    (['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'e8', 'e9', 'e10', 'e11','severity_type']).agg('count').reset_index()
+    l.rename(columns={'r1':'all_e1_counts'}, inplace=True)
+    train = pd.merge(train,l,on = ['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'e8', 'e9', 'e10', 'e11','severity_type'] , how = 'left')
+    test = pd.merge(test,l,on = ['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'e8', 'e9', 'e10', 'e11','severity_type'] , how = 'left')
+    
+    # logloss has been reduced little bit
+    #intractions
+    # intraction
+    l = train[['r1','l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9','l10', 'l11', 'l12', 'l13', 'l14', 'l15', 'l16', 'l17', 'l18','l19', 'l20','severity_type']].append(test[['r1','l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9','l10', 'l11', 'l12', 'l13', 'l14', 'l15', 'l16', 'l17', 'l18','l19', 'l20','severity_type']])
+    l =l.groupby\
+    (['l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9','l10', 'l11', 'l12', 'l13', 'l14', 'l15', 'l16', 'l17', 'l18','l19', 'l20','severity_type']).agg('count').reset_index()
+    l.rename(columns={'r1':'l1_all_counts'}, inplace=True)
+    train = pd.merge(train,l,on = ['l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9','l10', 'l11', 'l12', 'l13', 'l14', 'l15', 'l16', 'l17', 'l18','l19', 'l20','severity_type'] , how = 'left')
+    test = pd.merge(test,l,on = ['l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9','l10', 'l11', 'l12', 'l13', 'l14', 'l15', 'l16', 'l17', 'l18','l19', 'l20','severity_type'] , how = 'left')
+   
+    
+    # intraction l with location 
+    
+    l = train[['r1','l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9','l10', 'l11', 'l12', 'l13', 'l14', 'l15', 'l16', 'l17', 'l18','l19', 'l20','location']].append(test[['r1','l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9','l10', 'l11', 'l12', 'l13', 'l14', 'l15', 'l16', 'l17', 'l18','l19', 'l20','location']])
+    l =l.groupby\
+    (['l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9','l10', 'l11', 'l12', 'l13', 'l14', 'l15', 'l16', 'l17', 'l18','l19', 'l20','location']).agg('count').reset_index()
+    l.rename(columns={'r1':'lss1_all_counts'}, inplace=True)
+    train = pd.merge(train,l,on = ['l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9','l10', 'l11', 'l12', 'l13', 'l14', 'l15', 'l16', 'l17', 'l18','l19', 'l20','location'] , how = 'left')
+    test = pd.merge(test,l,on = ['l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9','l10', 'l11', 'l12', 'l13', 'l14', 'l15', 'l16', 'l17', 'l18','l19', 'l20','location'] , how = 'left')
+   
+   
+    #event _location
+   
+    
+   
+   
+   
+    
+   
+    id = test.id.values
+    y = train.fault_severity.values
+    
+  
+    
+    print train.shape,test.shape
+    
+    
+    
+    
+         
+    
+    
+    
+    #0.493408474727
+    k_train = ['v1','v2','v3','location_counts','e1_counts','weighted_sum_l3','weighted_sum_l2','weighted_sum_l1','weighted_sum_e1','lss1_all_counts','l1_all_counts', 'all_e1_counts','location', 'severity_type', 'e_counts', 'l_counts', 'r_counts','e1','l1','r1','r2','l2','e2','e3','l3','fault_severity']
+    k_test =  ['v1','v2','v3','location_counts','e1_counts','weighted_sum_l3','weighted_sum_l2','weighted_sum_l1','weighted_sum_e1','lss1_all_counts','l1_all_counts','all_e1_counts','location', 'severity_type', 'e_counts', 'l_counts', 'r_counts','e1','l1','r1','r2','l2','e2','e3','l3']
+    
+    #['1', u'event_type1', u'event_type1 event_type11']
+    
+    train = train[k_train]
+    test = test[k_test]
+    
+    #train['cc'] = train['weighted_sum_l2'] / (train['weighted_sum_l1'] + train['weighted_sum_l2'] + train['weighted_sum_l3'])
+    #test['cc'] = test['weighted_sum_l2'] / (test['weighted_sum_l1'] + test['weighted_sum_l2'] + test['weighted_sum_l3'])
+    
+    #train['cc1'] = train['weighted_sum_l1'] / (train['weighted_sum_l1'] + train['weighted_sum_l2'] + train['weighted_sum_l3'])
+    #test['cc1'] = test['weighted_sum_l1'] / (test['weighted_sum_l1'] + test['weighted_sum_l2'] + test['weighted_sum_l3'])
+    
+    #train['cc2'] = train['weighted_sum_l3'] / (train['weighted_sum_l1'] + train['weighted_sum_l2'] + train['weighted_sum_l3'])
+    #test['cc2'] = test['weighted_sum_l3'] / (test['weighted_sum_l1'] + test['weighted_sum_l2'] + test['weighted_sum_l3'])
+    
+    
+    """
+    [0.51374260998123356, 0.49530028240683527, 0.47474812010212214, 0.49634081524676532, 0.47903469934268367] 
+    acc_score [0.78010825439783493, 0.77506775067750677, 0.7872628726287263, 0.77235772357723576, 0.79050847457627116]
+      
+    """
+    
+    #493815055656
+    train['least_log_v1'] = train1_more['s_v1'].copy()
+    train['least_log_l1'] = train1_more['s_l1'].copy()
+    test['least_log_v1'] = test1_more['s_v1'].copy()
+    test['least_log_l1'] = test1_more['s_l1'].copy()
+    
+    
+    
+    
+    
+    #train['svd1'] = t1[:,0]
+    #test['svd1'] = t2[:,0]
+    #train['svd2'] = t1[:,1]
+    #test['svd2'] = t2[:,1]
+    
+    print 'before',test.shape,test.shape,train.shape,train.shape
+    train = train.drop('fault_severity',axis = 1)
+   
+   
+   
+   
+    text_columns = []
+    for f in train.columns:
+        if train[f].dtype=='object':
+            #print f
+            if f != 'loca':   
+                text_columns.append(f)            
+                lbl = preprocessing.LabelEncoder()
+                lbl.fit(list(train[f].values) + list(test[f].values))
+                train[f] = lbl.transform(list(train[f].values))
+                test[f] = lbl.transform(list(test[f].values))
+                
+                
+                
+    temp = train[['l1','location','severity_type']].append(test[['l1','location','severity_type']])
+ 
+    for i in np.unique(temp.location):    
+        ind_1 = (temp.location == i) & (temp.severity_type == 0)
+        #ind_2 = (temp.location == i) & (temp.severity_type == 1)
+        #train.loc[train.location == i, 'type0'] = temp.loc[(temp.location == i) & (temp.severity_type == 3)].shape[0]/float(temp.loc[(temp.location == i)].shape[0])
+        train.loc[train.location == i, 'type1'] = temp.loc[(temp.location == i) & (temp.severity_type == 1)].shape[0]/float(temp.loc[(temp.location == i)].shape[0])
+        
+        #test.loc[test.location == i, 'type0'] = temp.loc[(temp.location == i) & (temp.severity_type == 3)].shape[0]/float(temp.loc[(temp.location == i)].shape[0])
+        test.loc[test.location == i, 'type1'] = temp.loc[(temp.location == i) & (temp.severity_type == 1)].shape[0]/float(temp.loc[(temp.location == i)].shape[0])
+        
+    
+    
+    k1 = pd.DataFrame(temp.groupby(['location','severity_type']).agg('count')).reset_index()
+    k1.rename(columns={'l1':'one_way_intraction_location_severitytype'}, inplace=True)
+    
+    
+    
+    
+    
+    
+    train = pd.merge(train,k1,on = ['location','severity_type'] , how = 'left')    
+    test = pd.merge(test,k1,on = ['location','severity_type'] , how = 'left')    
+    
+    """
+    f = 'location'       
+    df_all = pd.concat((train, test), axis=0, ignore_index=True)
+    df_all_dummy = pd.get_dummies(df_all[f], prefix=f)
+    df_all = df_all.drop([f], axis=1)
+    df_all = pd.concat((df_all, df_all_dummy), axis=1)
+    
+    train = df_all.iloc[:train.shape[0]]
+    test = df_all.iloc[train.shape[0]:]    
+    
+    print 'sads',train.shape,test.shape
+    
+    """
+    
+    
+    
+    
+    k = train.columns
+      
+    test = test.replace(np.nan, -1)
+    train = train.replace(np.nan , -1)
+    
+    
+    
+    np.random.seed(0) # seed to shuffle the train set
+
+    n_folds = 5
+    X = train
+    train = 1
+
+    X_submission = test  
+    
+    test = 1
+    
+    print 'started stacking...........'
+    skf = list(StratifiedKFold(y, n_folds))
+
+
+
+
+    clfs = [ensemble.GradientBoostingClassifier(random_state = 42, learning_rate = 0.01,subsample = 1,  min_samples_split = 2 , max_features = 'sqrt' ,  n_estimators = 1000 , max_depth =  6),
+            ensemble.GradientBoostingClassifier(random_state = 42, learning_rate = 0.01,subsample = 1,  min_samples_split = 10 , max_features = 'sqrt' ,  n_estimators = 1000 , max_depth =  4),
+            ensemble.GradientBoostingClassifier(random_state = 42, learning_rate = 0.01,subsample = 1,  min_samples_split = 20 , max_features = None ,  n_estimators = 1000 , max_depth =  8),
+            ensemble.RandomForestClassifier(bootstrap=False, class_weight='auto', criterion='entropy',max_depth = 6, max_features='sqrt', max_leaf_nodes=None,min_samples_leaf=1, min_samples_split=2,min_weight_fraction_leaf=0.0, n_estimators = 1000, n_jobs=-1,oob_score=False, random_state= 42, verbose=0,warm_start=False),
+            ensemble.RandomForestClassifier(bootstrap=False, class_weight='auto', criterion='entropy',max_depth = 4, max_features=None, max_leaf_nodes=None,min_samples_leaf=1, min_samples_split=2,min_weight_fraction_leaf=0.0, n_estimators = 1000, n_jobs=-1,oob_score=False, random_state= 42, verbose=0,warm_start=False),
+            ensemble.ExtraTreesClassifier(bootstrap=False, class_weight=None, criterion='entropy',max_depth = 6, max_features=None, max_leaf_nodes=None,min_samples_leaf=1, min_samples_split=2,min_weight_fraction_leaf=1e-5, n_estimators = 1000, n_jobs=-1,oob_score=False, random_state=42, verbose=0, warm_start=False)           
+            ]               
+                       
+                       
+        
+    print "Creating train and test sets for blending."
+    
+    dataset_blend_train0 = np.zeros((X.shape[0], len(clfs)))
+    dataset_blend_test0 = np.zeros((X_submission.shape[0], len(clfs)))
+    
+    dataset_blend_train1 = np.zeros((X.shape[0], len(clfs)))
+    dataset_blend_test1 = np.zeros((X_submission.shape[0], len(clfs)))
+    
+    for j, clf in enumerate(clfs):
+        print j, clf
+        dataset_blend_test_j0 = np.zeros((X_submission.shape[0], len(skf)))
+        dataset_blend_test_j1 = np.zeros((X_submission.shape[0], len(skf)))
+        for i, (train, test) in enumerate(skf):
+            print "Fold", i
+            X_train = X.iloc[train]
+            y_train = y[train]
+            X_test = X.iloc[test]
+            y_test = y[test]
+            clf.fit(X_train, y_train)
+            y_submission = clf.predict_proba(X_test)
+            dataset_blend_train0[test, j] = y_submission[:,0]
+            dataset_blend_train1[test, j] = y_submission[:,1]
+            dataset_blend_test_j0[:, i] = clf.predict_proba(X_submission)[:,0]
+            dataset_blend_test_j1[:, i] = clf.predict_proba(X_submission)[:,1]
+            print j, clf, multiclass_log_loss(np.array(y_test), y_submission)
+        dataset_blend_test0[:,j] = dataset_blend_test_j0.mean(1)
+        dataset_blend_test1[:,j] = dataset_blend_test_j1.mean(1)
+        #pd.DataFrame(dataset_blend_test).to_csv(str(j)+'test5fold.csv' , index = False)
+        #pd.DataFrame(dataset_blend_train).to_csv(str(j)+'train5fold.csv' , index = False)
+    print
+    print "Blending."
+    dataset_blend_train = np.hstack((dataset_blend_train0 , dataset_blend_train1))
+    dataset_blend_test = np.hstack((dataset_blend_test0 , dataset_blend_test1))
+    clf = LogisticRegression()
+    params = [{'penalty':['l1','l2'],'C':[0.1,0.4,0.7,1,2,3,4,5,6,7,8,9,10], 'fit_intercept': ['True','False'] }]       
+    
+    
+    
+    
+    classifier = grid_search.GridSearchCV(clf,params, verbose=1, n_jobs = 2,cv = 10)
+    print "uhsgsggggsgsgsgggg"
+    
+    Loss = metrics.make_scorer( multiclass_log_loss   , greater_is_better= False,needs_proba=True)
+    score = cross_validation.cross_val_score(classifier,dataset_blend_train,y,scoring = Loss)
+    
+    
+    print score
+    
+    print 'mean', np.mean(score)
+    
+    classifier.fit(dataset_blend_train, y)
+    pred = classifier.predict_proba(dataset_blend_test)
+   
+    submission = pd.DataFrame({'id':id,'predict_0':pred[:,0],'predict_1':pred[:,1],'predict_2':pred[:,2]})
+    submission.to_csv('after_onehot.csv',index = False)    
+    
+    
+   
